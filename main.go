@@ -1,13 +1,17 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 
 	"github.com/cocuum/aggreGator/internal/config"
+	"github.com/cocuum/aggreGator/internal/database"
+	_ "github.com/lib/pq"
 )
 
 type state struct {
+	db	*database.Queries
 	cfg *config.Config
 }
 
@@ -17,9 +21,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to read config: %v", err)
 	}
+
+	//Open a connection to the database, and store it in the state struct
+	db, err := sql.Open("postgres", cfg.DBURL)
+	if err != nil {
+		log.Fatal("Cannot open connection to database:", err)
+	}
+	defer db.Close()
 	
-	// Store the config in a new instance of the state struct
+	dbQueries := database.New(db)
+	if dbQueries == nil {
+		log.Fatal("No Queries returned!!")
+	}
+	
+	// Store the config & database queries in a new instance of the state struct
 	programState := &state{
+		db: dbQueries,
 		cfg: &cfg,
 	}
 
@@ -28,8 +45,9 @@ func main() {
 		registeredCMDS: make(map[string]func(*state, command) error),
 	}
 
-	//Register a handler function for the login command
+	//Register a handler functions
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
 
 	//Test and collect args from user input
 	if len(os.Args) < 2 {
