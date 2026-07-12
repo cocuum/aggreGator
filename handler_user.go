@@ -9,6 +9,27 @@ import (
 	"github.com/google/uuid"
 )
 
+func handlerUsers(s *state, cmd command) error {
+	if len(cmd.Args) > 0 {
+		return fmt.Errorf("Usage: reset - no arguments are required")
+	}
+	users, err := s.db.GetAllUsers(context.Background())
+	if err != nil {
+		return fmt.Errorf("Could not retrieve users: %w", err)
+	}
+
+	currentUser := s.cfg.CurrentUserName
+
+	for _, user := range users {
+		if user.Name == currentUser {
+			fmt.Printf("* %s (current)\n", user.Name)
+			continue
+		}
+		fmt.Printf("* %s\n", user.Name)
+	}
+	return nil
+}
+
 func handlerRegister(s *state, cmd command) error {
 	if len(cmd.Args) == 0 {
 		return fmt.Errorf("Usage: register <name> - name is required") 

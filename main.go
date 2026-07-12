@@ -49,6 +49,7 @@ func main() {
 	cmds.register("login", handlerLogin)
 	cmds.register("register", handlerRegister)
 	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerUsers)
 
 	//Test and collect args from user input
 	if len(os.Args) < 2 {
