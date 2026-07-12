@@ -9,3 +9,6 @@ We're going to build an RSS feed aggregator in Go! We'll call it "Gator", you kn
 
 ## Prerequisites
 
+- GO
+- SQL (Postgres)
+

@@ -1,8 +1,66 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"time"
+
+	"github.com/cocuum/aggreGator/internal/database"
+	"github.com/google/uuid"
 )
+
+func handlerUsers(s *state, cmd command) error {
+	if len(cmd.Args) > 0 {
+		return fmt.Errorf("Usage: reset - no arguments are required")
+	}
+	users, err := s.db.GetAllUsers(context.Background())
+	if err != nil {
+		return fmt.Errorf("Could not retrieve users: %w", err)
+	}
+
+	currentUser := s.cfg.CurrentUserName
+
+	for _, user := range users {
+		if user.Name == currentUser {
+			fmt.Printf("* %s (current)\n", user.Name)
+			continue
+		}
+		fmt.Printf("* %s\n", user.Name)
+	}
+	return nil
+}
+
+func handlerRegister(s *state, cmd command) error {
+	if len(cmd.Args) == 0 {
+		return fmt.Errorf("Usage: register <name> - name is required") 
+	} else if len(cmd.Args) > 1 {
+		return fmt.Errorf("Usage: register <name> - only ONE name")
+	}
+
+	name := cmd.Args[0]
+
+	user,err := s.db.CreateUser(
+		context.Background(),
+		database.CreateUserParams{
+			ID:			uuid.New(),
+			CreatedAt:	time.Now().UTC(),
+			UpdatedAt:	time.Now().UTC(),
+			Name:		name,
+	})
+	if err != nil {
+		return fmt.Errorf("Could not create user: %w", err)
+	}
+	
+	err = s.cfg.SetUser(user.Name)
+	if err != nil {
+		return fmt.Errorf("Could not create user: %w", err)
+	}
+	
+	fmt.Printf("User %s was created successfully.\n", user.Name)
+	printUserInfo(user)
+
+	return nil
+}
 
 func handlerLogin(s *state, cmd command) error {
 	if len(cmd.Args) == 0 {
@@ -13,11 +71,21 @@ func handlerLogin(s *state, cmd command) error {
 
 	userName := cmd.Args[0]
 
-	err := s.cfg.SetUser(userName)
+	_,err := s.db.GetUser(context.Background(), userName)
 	if err != nil {
-		return fmt.Errorf("Username is not set correctly")
+		return fmt.Errorf("User %s does not exist", userName)
+	}
+
+	err = s.cfg.SetUser(userName)
+	if err != nil {
+		return fmt.Errorf("Could not create user: %w", err)
 	}
 	fmt.Printf("Username set to: %s\n", userName)
 
 	return nil
+}
+
+func printUserInfo(user database.User) {
+	fmt.Printf(" ++ ID:		%v\n", user.ID)
+	fmt.Printf(" ++ Name:	%v\n", user.Name)
 }
