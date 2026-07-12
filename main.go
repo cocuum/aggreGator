@@ -45,11 +45,12 @@ func main() {
 		registeredCMDS: make(map[string]func(*state, command) error),
 	}
 
-	//Register a handler functions
+	//Register handler functions
 	cmds.register("login", handlerLogin)
 	cmds.register("register", handlerRegister)
 	cmds.register("reset", handlerReset)
 	cmds.register("users", handlerUsers)
+	cmds.register("agg", handlerAgg)
 
 	//Test and collect args from user input
 	if len(os.Args) < 2 {
