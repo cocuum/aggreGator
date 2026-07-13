@@ -9,6 +9,19 @@ import (
 	"github.com/google/uuid"
 )
 
+func handlerListFeeds(s *state, cmd command) error {
+	feeds, err := s.db.GetAllFeeds(context.Background())
+	if err != nil {
+		return fmt.Errorf("Could not retrieve feeds: %w", err)
+	}
+
+	for i,feed := range feeds {
+		printAllFeeds(i, feed)
+	}
+
+	return nil
+}
+
 func handlerAddFeed(s *state, cmd command) error {
 	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
 	if err != nil {
@@ -46,4 +59,12 @@ func  printFeed(feed database.Feed) {
 	fmt.Printf("*Name:			%s\n",feed.Name)
 	fmt.Printf("*URL:			%s\n",feed.Url)
 	fmt.Printf("*User ID:		%s\n",feed.UserID)
+}
+
+func printAllFeeds (i int, feed database.GetAllFeedsRow) {
+	fmt.Printf("======= %d ========\n", i+1)
+	fmt.Printf("Feed Name:	%s\n", feed.FeedName)
+	fmt.Printf("Feed URL:	%s\n", feed.Url)
+	fmt.Printf("Username:	%s\n", feed.UserName)
+	fmt.Println("==================")
 }
