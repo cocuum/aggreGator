@@ -9,11 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func handlerAddFeed(s *state, cmd command) error {
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return err
-	}
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 
 	if len(cmd.Args) != 2 {
 		return fmt.Errorf("Usage: addfeed <name> <url> - name and url are required")
@@ -80,11 +76,11 @@ func handlerListFeeds(s *state, cmd command) error {
 }
 
 func  printFeed(feed database.Feed, user database.User) {
-	fmt.Printf("* ID:			%s\n", feed.ID)
+	fmt.Printf("* ID:		%s\n", feed.ID)
 	fmt.Printf("* Created at:	%v\n", feed.CreatedAt)
 	fmt.Printf("* Updated at:	%v\n", feed.UpdatedAt)
-	fmt.Printf("* Name:			%s\n", feed.Name)
-	fmt.Printf("* URL:			%s\n", feed.Url)
-	fmt.Printf("* User ID:		%s\n", feed.UserID)
-	fmt.Printf("* User:			%s\n", user.Name)
+	fmt.Printf("* Name:		%s\n", feed.Name)
+	fmt.Printf("* URL:		%s\n", feed.Url)
+	fmt.Printf("* User ID:	%s\n", feed.UserID)
+	fmt.Printf("* User:		%s\n", user.Name)
 }
