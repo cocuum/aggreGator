@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func handlerUsers(s *state, cmd command) error {
+func handlerListUsers(s *state, cmd command) error {
 	if len(cmd.Args) > 0 {
 		return fmt.Errorf("Usage: reset - no arguments are required")
 	}

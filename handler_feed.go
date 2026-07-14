@@ -9,19 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-func handlerListFeeds(s *state, cmd command) error {
-	feeds, err := s.db.GetAllFeeds(context.Background())
-	if err != nil {
-		return fmt.Errorf("Could not retrieve feeds: %w", err)
-	}
-
-	for i,feed := range feeds {
-		printAllFeeds(i, feed)
-	}
-
-	return nil
-}
-
 func handlerAddFeed(s *state, cmd command) error {
 	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
 	if err != nil {
@@ -46,25 +33,58 @@ func handlerAddFeed(s *state, cmd command) error {
 	if err != nil {
 		return fmt.Errorf("Could not create feed: %w", err)
 	}
+
+	feedFollow, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+	})
+
+	if err != nil {
+		return fmt.Errorf("Could not create feed follow: %w", err)
+	}
+
 	fmt.Println("Created feed successfully:")
-	printFeed(feed)
+	printFeed(feed, user)
+	fmt.Println()
+	fmt.Println("Feed followed successfully:")
+	printFeedFollow(feedFollow.UserName, feedFollow.FeedName)
+	fmt.Println("============================")
 
 	return nil
 }
 
-func  printFeed(feed database.Feed) {
-	fmt.Printf("*ID:			%s\n",feed.ID)
-	fmt.Printf("*Created at:	%v\n", feed.CreatedAt)
-	fmt.Printf("*Updated at:	%v\n", feed.UpdatedAt)
-	fmt.Printf("*Name:			%s\n",feed.Name)
-	fmt.Printf("*URL:			%s\n",feed.Url)
-	fmt.Printf("*User ID:		%s\n",feed.UserID)
+func handlerListFeeds(s *state, cmd command) error {
+	feeds, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		return fmt.Errorf("Could not retrieve feeds: %w", err)
+	}
+
+	if len(feeds) == 0 {
+		fmt.Println("No feeds found.")
+		return nil
+	}
+	fmt.Printf("Found %d feeds:\n", len(feeds))
+	for _,feed := range feeds {
+		user, err:= s.db.GetUserById(context.Background(), feed.UserID)
+		if err != nil {
+			return fmt.Errorf("Could not get user: %w", err)
+		}
+		printFeed(feed, user)
+		fmt.Println("============================")
+	}
+
+	return nil
 }
 
-func printAllFeeds (i int, feed database.GetAllFeedsRow) {
-	fmt.Printf("======= %d ========\n", i+1)
-	fmt.Printf("Feed Name:	%s\n", feed.FeedName)
-	fmt.Printf("Feed URL:	%s\n", feed.Url)
-	fmt.Printf("Username:	%s\n", feed.UserName)
-	fmt.Println("==================")
+func  printFeed(feed database.Feed, user database.User) {
+	fmt.Printf("* ID:			%s\n", feed.ID)
+	fmt.Printf("* Created at:	%v\n", feed.CreatedAt)
+	fmt.Printf("* Updated at:	%v\n", feed.UpdatedAt)
+	fmt.Printf("* Name:			%s\n", feed.Name)
+	fmt.Printf("* URL:			%s\n", feed.Url)
+	fmt.Printf("* User ID:		%s\n", feed.UserID)
+	fmt.Printf("* User:			%s\n", user.Name)
 }
