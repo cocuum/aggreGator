@@ -8,6 +8,7 @@ import (
 
 	"github.com/cocuum/aggreGator/internal/config"
 	"github.com/cocuum/aggreGator/internal/database"
+	
 	_ "github.com/lib/pq"
 )
 
@@ -57,6 +58,7 @@ func main() {
 	cmds.register("follow", middlewareLoggedIn(handlerFollow))
 	cmds.register("following", middlewareLoggedIn(handlerListFeedFollows))
 	cmds.register("unfollow", middlewareLoggedIn(handlerDeleteFeedFollow))
+	cmds.register("browse", middlewareLoggedIn(handlerBrowse))
 
 	//Test and collect args from user input
 	if len(os.Args) < 2 {

@@ -83,4 +83,5 @@ func  printFeed(feed database.Feed, user database.User) {
 	fmt.Printf("* URL:		%s\n", feed.Url)
 	fmt.Printf("* User ID:	%s\n", feed.UserID)
 	fmt.Printf("* User:		%s\n", user.Name)
+	fmt.Printf("* LastPublishedAt: %v\n", feed.LastFetchedAt.Time)
 }
