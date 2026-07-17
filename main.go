@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"os"
 
 	"github.com/cocuum/aggreGator/internal/config"
 	"github.com/cocuum/aggreGator/internal/database"
+	
 	_ "github.com/lib/pq"
 )
 
@@ -45,11 +47,18 @@ func main() {
 		registeredCMDS: make(map[string]func(*state, command) error),
 	}
 
-	//Register a handler functions
-	cmds.register("login", handlerLogin)
+	//Register handler functions
 	cmds.register("register", handlerRegister)
+	cmds.register("login", handlerLogin)
 	cmds.register("reset", handlerReset)
-	cmds.register("users", handlerUsers)
+	cmds.register("users", handlerListUsers)
+	cmds.register("agg", handlerAgg)
+	cmds.register("addfeed", middlewareLoggedIn(handlerAddFeed))
+	cmds.register("feeds", handlerListFeeds)
+	cmds.register("follow", middlewareLoggedIn(handlerFollow))
+	cmds.register("following", middlewareLoggedIn(handlerListFeedFollows))
+	cmds.register("unfollow", middlewareLoggedIn(handlerDeleteFeedFollow))
+	cmds.register("browse", middlewareLoggedIn(handlerBrowse))
 
 	//Test and collect args from user input
 	if len(os.Args) < 2 {
@@ -64,4 +73,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+}
+
+func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+	return func(s *state, cmd command) error {
+		user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
+		if err != nil {
+			return err
+		}
+
+		return handler(s,cmd,user)
+	}
 }
